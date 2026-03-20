@@ -4,6 +4,7 @@ import org.apache.log4j.Logger;
 import ru.job4j.grabber.model.Post;
 
 import java.sql.*;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -25,7 +26,7 @@ public class JdbcStore implements Store {
             statement.setString(1, post.getTitle());
             statement.setString(2, post.getLink());
             statement.setString(3, post.getDescription());
-            statement.setTimestamp(4, new Timestamp(post.getTime()));
+            statement.setTimestamp(4, Timestamp.from(Instant.ofEpochMilli(post.getTime())));
             try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
                 if (generatedKeys.next()) {
                     post.setId(generatedKeys.getLong(1));
