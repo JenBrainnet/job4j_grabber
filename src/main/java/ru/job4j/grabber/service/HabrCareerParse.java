@@ -7,7 +7,7 @@ import ru.job4j.grabber.model.Post;
 import ru.job4j.grabber.utils.DateTimeParser;
 
 import java.io.IOException;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -44,7 +44,10 @@ public class HabrCareerParse implements Parse {
         var dataElement = row.select(".vacancy-card__date").first();
         var timeElement = dataElement.child(0);
         String dateTime = timeElement.attr("datetime");
-        long time = dateTimeParser.parse(dateTime).toEpochSecond(ZoneOffset.UTC);
+        long time = dateTimeParser.parse(dateTime)
+                .atZone(ZoneId.systemDefault())
+                .toInstant()
+                .toEpochMilli();
 
         var titleElement = row.select(".vacancy-card__title").first();
         var linkElement = titleElement.child(0);
@@ -62,35 +65,36 @@ public class HabrCareerParse implements Parse {
 
     private String retrieveDescription(String link) {
         StringBuilder result = new StringBuilder();
+        String ln = System.lineSeparator();
         try {
             var document = Jsoup.connect(link).get();
             var salaryElement = document.select(".vacancy-header__salary").first();
             if (salaryElement != null) {
                 result.append("Зарплата: ")
                         .append(salaryElement.text())
-                        .append("\n");
+                        .append(ln);
             }
             var companyElement = document.select(".vacancy-company__title").first();
             if (companyElement != null) {
                 result.append("Компания: ")
                         .append(companyElement.text())
-                        .append("\n");
+                        .append(ln);
             }
             var tags = document.select(".chip-with-icon__text");
             if (!tags.isEmpty()) {
                 result.append("Требования и условия: ");
                 result.append(String.join(", ", tags.eachText()));
-                result.append("\n");
+                result.append(ln);
             }
             var descriptionElement = document.select(".vacancy-description__text").first();
             if (descriptionElement != null) {
-                result.append("Описание вакансии:\n");
+                result.append("Описание вакансии:").append(ln);
                 Set<String> unique = descriptionElement.select("p, li, h2, h3")
                         .stream()
                         .map(Element::text)
                         .filter(t -> !t.isBlank())
                         .collect(Collectors.toCollection(LinkedHashSet::new));
-                unique.forEach(element -> result.append(element).append("\n"));
+                unique.forEach(element -> result.append(element).append(ln));
             }
         } catch (IOException e) {
             LOGGER.error("When retrieve description", e);

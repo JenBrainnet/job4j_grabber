@@ -21,18 +21,19 @@ public class JdbcStore implements Store {
     @Override
     public void save(Post post) {
         try (PreparedStatement statement = connection.prepareStatement(
-                             "INSERT INTO posts(title, link, description, time) VALUES (?, ?, ?, ?)",
+                             "INSERT INTO posts(name, link, text, created) VALUES (?, ?, ?, ?) "
+                                     + "ON CONFLICT (link) DO NOTHING",
                              PreparedStatement.RETURN_GENERATED_KEYS)) {
             statement.setString(1, post.getTitle());
             statement.setString(2, post.getLink());
             statement.setString(3, post.getDescription());
             statement.setTimestamp(4, Timestamp.from(Instant.ofEpochMilli(post.getTime())));
+            statement.executeUpdate();
             try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
                 if (generatedKeys.next()) {
                     post.setId(generatedKeys.getLong(1));
                 }
             }
-            statement.executeUpdate();
         } catch (SQLException e) {
             LOGGER.error("When insert a new post", e);
         }
@@ -72,10 +73,10 @@ public class JdbcStore implements Store {
     private Post createPost(ResultSet resultSet) throws SQLException {
         Post post = new Post();
         post.setId(resultSet.getLong("id"));
-        post.setTitle(resultSet.getString("title"));
+        post.setTitle(resultSet.getString("name"));
         post.setLink(resultSet.getString("link"));
-        post.setDescription(resultSet.getString("description"));
-        post.setTime(resultSet.getTimestamp("time").getTime());
+        post.setDescription(resultSet.getString("text"));
+        post.setTime(resultSet.getTimestamp("created").getTime());
         return post;
     }
 
