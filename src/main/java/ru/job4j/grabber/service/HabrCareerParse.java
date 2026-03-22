@@ -7,19 +7,22 @@ import ru.job4j.grabber.model.Post;
 import ru.job4j.grabber.utils.DateTimeParser;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
+import java.time.ZoneOffset;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class HabrCareerParse implements Parse, DateTimeParser {
+public class HabrCareerParse implements Parse {
 
     private static final Logger LOGGER = Logger.getLogger(HabrCareerParse.class);
     private static final String SOURCE_LINK = "https://career.habr.com";
     private static final String PREFIX = "/vacancies?page=";
     private static final String SUFFIX = "&q=Java%20developer&type=all";
     private static final int PAGES = 5;
+    private final DateTimeParser dateTimeParser;
+
+    public HabrCareerParse(DateTimeParser dateTimeParser) {
+        this.dateTimeParser = dateTimeParser;
+    }
 
     @Override
     public List<Post> fetch() {
@@ -41,7 +44,7 @@ public class HabrCareerParse implements Parse, DateTimeParser {
         var dataElement = row.select(".vacancy-card__date").first();
         var timeElement = dataElement.child(0);
         String dateTime = timeElement.attr("datetime");
-        long time = OffsetDateTime.parse(dateTime).toInstant().toEpochMilli();
+        long time = dateTimeParser.parse(dateTime).toEpochSecond(ZoneOffset.UTC);
 
         var titleElement = row.select(".vacancy-card__title").first();
         var linkElement = titleElement.child(0);
@@ -93,15 +96,6 @@ public class HabrCareerParse implements Parse, DateTimeParser {
             LOGGER.error("When retrieve description", e);
         }
         return result.toString();
-    }
-
-    @Override
-    public LocalDateTime parse(String parse) {
-        return LocalDateTime.parse(parse, DateTimeFormatter.ISO_DATE_TIME);
-    }
-
-    public static void main(String[] args) {
-        (new HabrCareerParse()).fetch();
     }
 
 }

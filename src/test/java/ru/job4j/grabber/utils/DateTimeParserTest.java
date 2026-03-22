@@ -1,4 +1,4 @@
-package ru.job4j.grabber.service;
+package ru.job4j.grabber.utils;
 
 import org.junit.jupiter.api.Test;
 
@@ -7,11 +7,11 @@ import java.time.format.DateTimeParseException;
 
 import static org.assertj.core.api.Assertions.*;
 
-class HabrCareerParseTest {
+class DateTimeParserTest {
 
     @Test
     void whenValidDateThenParseCorrectly() {
-        HabrCareerParse parser = new HabrCareerParse();
+        DateTimeParser parser = new DateTimeParser();
         String dateToParse = "2026-02-24T12:07:22";
         LocalDateTime result = parser.parse(dateToParse);
         LocalDateTime expected = LocalDateTime.of(2026, 2, 24, 12, 7, 22);
@@ -20,7 +20,7 @@ class HabrCareerParseTest {
 
     @Test
     void whenDateWithZoneThenZoneIgnored() {
-        HabrCareerParse parser = new HabrCareerParse();
+        DateTimeParser parser = new DateTimeParser();
         String dateToParse = "2026-02-24T12:07:22+03:00";
         LocalDateTime result = parser.parse(dateToParse);
         LocalDateTime expected = LocalDateTime.of(2026, 2, 24, 12, 7, 22);
@@ -29,7 +29,7 @@ class HabrCareerParseTest {
 
     @Test
     void whenInvalidDateFormatThenExceptionThrown() {
-        HabrCareerParse parser = new HabrCareerParse();
+        DateTimeParser parser = new DateTimeParser();
         String dateToParse = "not a date";
         assertThatThrownBy(() -> parser.parse(dateToParse))
                 .isInstanceOf(DateTimeParseException.class);
@@ -37,7 +37,7 @@ class HabrCareerParseTest {
 
     @Test
     void whenDateIsEmptyFormatThenExceptionThrown() {
-        HabrCareerParse parser = new HabrCareerParse();
+        DateTimeParser parser = new DateTimeParser();
         String dateToParse = "";
         assertThatThrownBy(() -> parser.parse(dateToParse))
                 .isInstanceOf(DateTimeParseException.class);
